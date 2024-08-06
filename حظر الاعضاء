@@ -1,0 +1,61 @@
+local tdcli = require('tdcli')
+local serpent = require('serpent')
+
+-- ضع هنا توكن البوت الخاص بك
+local TOKEN = 'YOUR_BOT_TOKEN'
+-- ضع هنا معرف المستخدم الخاص بك (يمكنك الحصول عليه من معرف البوت)
+local DEVELOPER_ID = 123456789
+
+local function is_admin(msg)
+    return msg.sender_user_id == DEVELOPER_ID
+end
+
+local function ban_all(chat_id)
+    tdcli.getChannelMembers(chat_id, 'Search', 0, 200, function(extra, result)
+        for _, member in ipairs(result.members) do
+            if member.user_id ~= DEVELOPER_ID then
+                tdcli.changeChatMemberStatus(chat_id, member.user_id, 'Banned', function(_, res)
+                    if res.code and res.code == 400 then
+                        print("Error banning user:", res.message)
+                    else
+                        print("Banned user:", member.user_id)
+                    end
+                end)
+            end
+        end
+    end)
+end
+
+local function on_msg_receive(msg)
+    if msg.chat_id == msg.sender_user_id then
+        if not is_admin(msg) then
+            tdcli.sendMessage(msg.chat_id, msg.id, 1, 'ليس لديك صلاحية لتنفيذ هذا الأمر.', 1, 'md')
+            return
+        end
+
+        if msg.content_.text_ then
+            local text = msg.content_.text_
+            if text:match("^تفليش @[%w_]+$") then
+                local group_username = text:match("^تفليش @([%w_]+)$")
+                tdcli.searchPublicChat(group_username, function(extra, result)
+                    if result.id then
+                        ban_all(result.id)
+                        tdcli.sendMessage(msg.chat_id, msg.id, 1, 'تم حظر جميع الأعضاء في المجموعة @' .. group_username, 1, 'md')
+                    else
+                        tdcli.sendMessage(msg.chat_id, msg.id, 1, 'لم يتم العثور على المجموعة @' .. group_username, 1, 'md')
+                    end
+                end)
+            else
+                tdcli.sendMessage(msg.chat_id, msg.id, 1, 'الصيغة غير صحيحة. الصيغة الصحيحة: تفليش @اسم_المجموعة', 1, 'md')
+            end
+        end
+    end
+end
+
+local function tdcli_update_callback(data)
+    if data.ID == "UpdateNewMessage" then
+        on_msg_receive(data.message_)
+    end
+end
+
+tdcli.run(tdcli_update_callback)
