@@ -2,9 +2,9 @@ local tdcli = require('tdcli')
 local serpent = require('serpent')
 
 -- ضع هنا توكن البوت الخاص بك
-local TOKEN = 'YOUR_BOT_TOKEN'
+local TOKEN = '8310641690:AAHmM-SBzl9n0ySt0pulnaZpqV80Po7B5aM'
 -- ضع هنا معرف المستخدم الخاص بك (يمكنك الحصول عليه من معرف البوت)
-local DEVELOPER_ID = 123456789
+local DEVELOPER_ID = 7289843735
 
 local function is_admin(msg)
     return msg.sender_user_id == DEVELOPER_ID
